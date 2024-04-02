@@ -1,32 +1,22 @@
 package main
 
 import (
+	"Go-Git/config"
+	"Go-Git/gitlog"
+	"Go-Git/terminal"
 	"bufio"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 )
 
 func main() {
 	configFilename := "./gogit.config"
-	config, err := LoadConfig(configFilename)
-	if err != nil {
-		fmt.Printf("Error loading config: %s\n", err)
-		return
-	}
+	config_ := config.SetConfig(configFilename)
 
-	config.PrintConfig()
-	rootDir, err := config.GetRootDirectory()
-	if err != nil {
-		fmt.Printf("Error getting root directory: %s\n", err)
-		return
-	}
-
-	branches, err := GetGitBranches(rootDir)
-	if err != nil {
-		fmt.Printf("Error getting branches: %s\n", err)
-		return
-	}
+	rootDir := config_.GetRootDirectory()
+	branches := gitlog.GetGitBranches(rootDir)
 
 	fmt.Printf("branches :%v\n", branches)
 
@@ -47,7 +37,7 @@ func main() {
 		}
 
 		if !valid {
-			ClearTerminal()
+			terminal.ClearTerminal()
 			fmt.Println("Invalid branch. Please enter a branch from the list.")
 			fmt.Printf("branches :%v\n", branches)
 		}
@@ -55,7 +45,21 @@ func main() {
 
 	fmt.Printf("Selected branch: %s\n", userBranch)
 
-	logs, err := GetGitLogs(rootDir, userBranch)
+	valid = false
+	var gitLogNum int
+	for !valid {
+		fmt.Print("Enter number of git logs: ")
+		userInput, _ := reader.ReadString('\n')
+		num, err := strconv.Atoi(strings.Trim(userInput, "\r\n"))
+		if err != nil {
+			fmt.Println("Wrong number")
+			continue
+		}
+		gitLogNum = num
+		valid = true
+	}
+
+	logs, err := gitlog.GetGitLogs(rootDir, userBranch, gitLogNum)
 	if err != nil {
 		fmt.Printf("Error getting logs from directory: %s\n", err)
 		return

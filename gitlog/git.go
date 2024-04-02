@@ -1,21 +1,33 @@
-package main
+package gitlog
 
 import (
 	"bytes"
 	"os/exec"
+	"strconv"
 	"strings"
 )
 
-func GetGitBranches(dir string) ([]string, error) {
+// IsGitRepository checks if a given path is a git repository.
+func IsGitRepository(path string) bool {
 	cmd := exec.Command("git", "branch", "--list")
-	cmd.Dir = dir
+	cmd.Dir = path
 
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()
 	if err != nil {
-		return nil, err
+		return false
 	}
+	return true
+}
+
+func GetGitBranches(dir string) []string {
+	cmd := exec.Command("git", "branch", "--list")
+	cmd.Dir = dir
+
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	_ = cmd.Run()
 
 	branches := strings.Split(out.String(), "\n")
 	var cleanBranches []string
@@ -31,11 +43,11 @@ func GetGitBranches(dir string) ([]string, error) {
 		}
 		cleanBranches = append(cleanBranches, branch)
 	}
-	return cleanBranches, nil
+	return cleanBranches
 }
 
-func GetGitLogs(dir string, branch string) (string, error) {
-	cmd := exec.Command("git", "log", branch)
+func GetGitLogs(dir string, branch string, num int) (string, error) {
+	cmd := exec.Command("git", "log", "-n", strconv.Itoa(num), branch)
 	cmd.Dir = dir
 
 	var out bytes.Buffer
