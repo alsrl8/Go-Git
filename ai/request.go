@@ -20,7 +20,7 @@ type Request struct {
 }
 
 func RequestToSummarizeGitLogs(commits []gitlog.Commit, reports []string) string {
-	content := fmt.Sprintf("%+v\n\n%+v\n", commits, reports)
+	content := fmt.Sprintf("%+v\n%+v\n", commits, reports)
 
 	request := Request{
 		Model: Gpt4,

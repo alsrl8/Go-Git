@@ -128,7 +128,7 @@ InputReport:
 		case "Y", "y":
 			return reports, true
 		case "N", "n":
-			return reports, false
+			return []string{}, false
 		default:
 			alert = "Wrong input. Choose one of them (Y/M)\n"
 			continue
