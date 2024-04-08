@@ -19,19 +19,19 @@ type Request struct {
 	Messages []Message `json:"messages"`
 }
 
-func RequestToSummarizeGitLogs(commits []gitlog.Commit) {
-	content := fmt.Sprintf("%+v\nEOF", commits)
+func RequestToSummarizeGitLogs(commits []gitlog.Commit, reports []string) string {
+	content := fmt.Sprintf("%+v\n\n%+v\n", commits, reports)
 
 	request := Request{
 		Model: Gpt4,
 		Messages: []Message{
-			{Role: RoleSystem, Content: "You should read the Git commit logs and make a summary for the daily report. The final format of the summary is markdown, and the example is as follows.\n- Functional development\n  - How did you develop a function called a.\n- Debugging\n  - Fixed a bug.\n- - Refactor\n  - I did a refactor of some code.\n- - Test\n  - I did some kind of test.\n- Deployment\n  - A service was distributed.\n\nThe following is a list of git commit logs for the work the worker has done today. You make summary in Korean."},
+			{Role: RoleSystem, Content: "You should read the Git commit logs and daily report, and make a summary for the daily report. The final format of the summary is markdown, and the example is as follows.\n- Functional development\n  - How did you develop a function called a.\n- Debugging\n  - Fixed a bug.\n- - Refactor\n  - I did a refactor of some code.\n- - Test\n  - I did some kind of test.\n- Deployment\n  - A service was distributed.\n\nThe following is a list of git commit logs for the work the worker has done today. You make summary in Korean."},
 			{Role: RoleUser, Content: content},
 		},
 	}
 	respBody := SendChatRequest(request)
 	resp, _ := ReadChatResponseBody(respBody)
-	fmt.Println(resp)
+	return resp
 }
 
 func SendChatRequest(chatRequest Request) []byte {

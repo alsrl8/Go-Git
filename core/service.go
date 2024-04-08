@@ -4,9 +4,11 @@ import (
 	"Go-Git/ai"
 	"Go-Git/config"
 	"Go-Git/gitlog"
+	"Go-Git/slack"
 	"Go-Git/terminal"
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -17,18 +19,31 @@ func Service(conf config.Config) {
 
 	rootDir := conf.GetRootDirectory()
 	branch := selectBranch(rootDir)
+	var summary string
 	for {
 		gitLogNum := inputGitLogNumber()
 		gitLogs, _ := gitlog.GetGitLogs(rootDir, branch, gitLogNum)
 
 		commits := gitlog.ParseGitLogs(gitLogs)
-		confirm := confirmSummarize(commits)
+		reports, confirm := confirmSummarize(commits)
 		if !confirm {
 			continue
 		}
-		ai.RequestToSummarizeGitLogs(commits)
+		summary = ai.RequestToSummarizeGitLogs(commits, reports)
 		break
 	}
+
+	channelId := "D06E3025AF6"
+	messages, err := slack.FetchChannelMessages(channelId)
+	if err != nil {
+		log.Fatalf("Failed to fetch channel messages from slack api. %v\n", err)
+		return
+	}
+
+	// TODO Channel Message 원하는 걸 못 찾았다면 어떻게 처리할지?
+
+	ts := messages.Messages[0].Ts
+	slack.PostMessage(channelId, summary, ts)
 }
 
 func selectBranch(rootDir string) (userBranch string) {
@@ -78,25 +93,42 @@ func inputGitLogNumber() int {
 	}
 }
 
-func confirmSummarize(commits []gitlog.Commit) bool {
+func confirmSummarize(commits []gitlog.Commit) ([]string, bool) {
+	reader := bufio.NewReader(os.Stdin)
+
 	for _, commit := range commits {
 		fmt.Printf("%v\n", commit)
 	}
+
+	terminal.PrintNotice("If you have something more to report, enter it. After entering all reports, please enter `q`\n")
+	var reports []string
+InputReport:
+	for {
+		input, _ := reader.ReadString('\n')
+		input = strings.Trim(input, "\r\n")
+
+		switch input {
+		case "q", "Q":
+			break InputReport
+		default:
+			reports = append(reports, input)
+		}
+	}
+
 	alert := ""
 	for {
 		if alert != "" {
 			terminal.PrintAlert(alert)
 		}
 		terminal.PrintNotice("Are you gonna summarize this git commits? : (Y/N)")
-		reader := bufio.NewReader(os.Stdin)
 		input, _ := reader.ReadString('\n')
 		input = strings.Trim(input, "\r\n")
 
 		switch input {
 		case "Y", "y":
-			return true
+			return reports, true
 		case "N", "n":
-			return false
+			return reports, false
 		default:
 			alert = "Wrong input. Choose one of them (Y/M)\n"
 			continue

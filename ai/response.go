@@ -3,7 +3,6 @@ package ai
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 )
 
 type Response struct {
@@ -38,13 +37,7 @@ func ReadChatResponseBody(respBody []byte) (string, int) {
 
 	if len(response.Choices) > 0 {
 		firstContent := response.Choices[0].Message.Content
-		lines := strings.Split(firstContent, "\n")
-		indent := "    "
-		for i, line := range lines {
-			lines[i] = indent + line
-		}
-		indentedContent := strings.Join(lines, "\n")
-		return indentedContent, response.Usage.TotalTokens
+		return firstContent, response.Usage.TotalTokens
 	} else {
 		fmt.Println("No content found")
 		return "", -1
