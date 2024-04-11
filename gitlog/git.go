@@ -50,6 +50,10 @@ func GetGitBranches(dir string) []string {
 
 // GetGitLogs retrieves the git logs for a given directory, branch, and number of logs.
 func GetGitLogs(dir string, branch string, num int) (string, error) {
+	if num == 0 {
+		return "", nil
+	}
+
 	fmtStr := "%H%n%an%n%ae%n%ad%n%B%n%%%"
 	fmtOption := fmt.Sprintf("--pretty=format:%s", fmtStr)
 

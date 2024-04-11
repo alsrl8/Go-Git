@@ -23,13 +23,13 @@ func Service(conf config.Config) {
 	for {
 		gitLogNum := inputGitLogNumber()
 		gitLogs, _ := gitlog.GetGitLogs(rootDir, branch, gitLogNum)
-
 		commits := gitlog.ParseGitLogs(gitLogs)
 		reports, confirm := confirmSummarize(commits)
 		if !confirm {
 			continue
 		}
 		summary = ai.RequestToSummarizeGitLogs(commits, reports)
+		fmt.Printf("%s\n", summary)
 		break
 	}
 

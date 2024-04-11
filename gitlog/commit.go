@@ -11,6 +11,10 @@ type Commit struct {
 }
 
 func ParseGitLogs(logs string) (commits []Commit) {
+	if logs == "" {
+		return
+	}
+
 	separator := "%%\n"
 	logEntries := strings.Split(logs, separator)
 
